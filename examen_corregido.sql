@@ -1,4 +1,3 @@
--- Fichero: examen_corregido_final.sql
 -- ---------------------------------------------------------------------
 -- EJERCICI 1: Procediment proc_pac(dniMetge)
 -- ---------------------------------------------------------------------
@@ -47,21 +46,20 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
 -- ---------------------------------------------------------------------
 -- EJERCICI 2.1: Trigger per actualitzar ingressos
 -- ---------------------------------------------------------------------
 
--- 1) Creació de la taula amb DEFAULT 0
+-- 1) Creació de la taula
 CREATE TABLE IF NOT EXISTS ingressos_visites (
-    total NUMERIC(14,3) DEFAULT 0
+    total NUMERIC(14,3)
 );
 
 -- 2) Inicialització: inserim una fila amb valor 0 només si la taula està buida
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT * FROM ingressos_visites) THEN
-    INSERT INTO ingressos_visites DEFAULT VALUES;
+    INSERT INTO ingressos_visites VALUES (0);
   END IF;
 END;
 $$;
@@ -95,7 +93,6 @@ CREATE TRIGGER trig_act_ingressos
   AFTER INSERT ON visita
   FOR EACH ROW
   EXECUTE FUNCTION proc_act_ingressos();
-
 
 
 -- ---------------------------------------------------------------------
