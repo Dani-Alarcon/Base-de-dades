@@ -3,33 +3,22 @@
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE proc_pac(dniMetge NUMERIC(9)) AS $$
 DECLARE
-    var_pacient        RECORD;
-    var_cognom_metge   VARCHAR(20);
+    var_pacient      RECORD;
+    var_cognom_metge VARCHAR(20);
 
-    -- Cursor que recorre els pacients atesos pel metge
-    curs_dades_pacients CURSOR FOR
-      SELECT DISTINCT
-        p.dni,
-        p.nom,
-        p.cognom1,
-        p.data_naix,
-        p.telefon,
-        p.mail
+    CURSOR curs_pacients IS
+      SELECT p.dni, p.nom, p.cognom1, p.data_naix, p.telefon, p.mail
       FROM persona p
-      JOIN metge m
-        ON p.dni = m.dni_metge
+      JOIN metge m ON p.dni = m.dni_metge
       WHERE m.dni_metge = dniMetge;
 BEGIN
-    -- Comprovació que el metge existeix (recollim el seu cognom)
     SELECT p.cognom1
       INTO var_cognom_metge
     FROM persona p
-    JOIN metge m
-      ON p.dni = m.dni_metge
+    JOIN metge m ON p.dni = m.dni_metge
     WHERE m.dni_metge = dniMetge;
 
-    -- Recorregut del cursor per mostrar dades de cada pacient
-    FOR var_pacient IN curs_dades_pacients LOOP
+    FOR var_pacient IN curs_pacients LOOP
         RAISE NOTICE
           'DNI: %, Nom: %, Cognom: %, Data de naixement: %, Telèfon: %',
           var_pacient.dni,
@@ -37,6 +26,10 @@ BEGIN
           var_pacient.cognom1,
           var_pacient.data_naix,
           var_pacient.telefon;
+
+        UPDATE persona
+           SET mail = var_cognom_metge || '_' || var_pacient.mail
+         WHERE dni = var_pacient.dni;
     END LOOP;
 
 EXCEPTION
@@ -44,7 +37,6 @@ EXCEPTION
         RAISE EXCEPTION 'El metge no existeix!';
 END;
 $$ LANGUAGE plpgsql;
-
 
 -- ---------------------------------------------------------------------
 -- EJERCICI 2.1: Trigger per actualitzar ingressos
